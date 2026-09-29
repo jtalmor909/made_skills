@@ -1,0 +1,14 @@
+{
+  "name": "johnny-reel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.8.92 preview",
+    "check": "npx --yes hyperframes@0.8.92 check",
+    "render": "npx --yes hyperframes@0.8.92 render -f 30 -q high -o out/johnny-reel.mp4"
+  },
+  "devDependencies": {
+    "gsap": "^3.13.0",
+    "hyperframes": "0.8.92"
+  }
+}

@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id":"firstName","type":"string","label":"First name","default":"Johnny"},
+  {"id":"lastName","type":"string","label":"Last name","default":"Talmor"},
+  {"id":"finalTitle","type":"string","label":"Final title (serif word)","default":"Motion"},
+  {"id":"finalLead","type":"string","label":"Final title (lead words)","default":"Head of"},
+  {"id":"accent","type":"color","label":"Accent","default":"#FF4A1C"}
+]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <link rel="stylesheet" href="assets/fonts.css" />
+    <script src="assets/gsap.min.js"></script>
+    <script src="assets/silhouette.js"></script>
+    <style>
+      :root {
+        --paper: #efebe3;
+        --ink: #131313;
+        --night: #0d0d0f;
+        --accent: #ff4a1c;
+        --muted: rgba(19, 19, 19, 0.45);
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--paper); }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden;
+        font-family: 'Inter Tight', sans-serif; color: var(--ink); background: var(--paper); }
+      .abs { position: absolute; }
+      .clip { position: absolute; inset: 0; }
+      .mono { font-family: 'JetBrains Mono', monospace; font-weight: 500; letter-spacing: 0.04em; }
+      .serif { font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; }
+
+      /* ---------- paper world ---------- */
+      #grid { background-image:
+          linear-gradient(to right, rgba(19,19,19,.07) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(19,19,19,.07) 1px, transparent 1px);
+        background-size: 90px 90px; background-position: 0 0; }
+      .guide { background: rgba(255, 74, 28, .55); }
+      #guideH { left: 0; top: 960px; width: 1080px; height: 1px; transform-origin: 0 50%; }
+      #guideV { left: 540px; top: 0; width: 1px; height: 1920px; transform-origin: 50% 0; }
+
+      #hello { left: 0; top: 330px; width: 1080px; text-align: center; font-size: 250px;
+        font-weight: 800; letter-spacing: -0.055em; line-height: 1; white-space: nowrap; }
+      #hello .ch { display: inline-block; }
+      #hello .dot { color: var(--accent); }
+      #caret { left: 0; top: 350px; width: 10px; height: 210px; background: var(--accent); }
+
+      #sil { left: -8px; top: 713px; width: 776px; height: 1233px; }
+      #silImg { width: 100%; height: 100%; display: block; clip-path: inset(100% 0% 0% 0%); }
+      #silSvg { left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
+      #silPath { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linejoin: round; }
+      .handle { stroke: var(--ink); stroke-width: 2.5; }
+      .vtx { fill: var(--paper); stroke: var(--accent); stroke-width: 4; }
+
+      #nameBlock { left: 560px; top: 760px; width: 500px; }
+      #im { font-size: 92px; line-height: 1; color: var(--muted); }
+      .nameLine { overflow: hidden; height: 128px; }
+      .nameLine span { display: inline-block; font-size: 132px; font-weight: 800;
+        letter-spacing: -0.05em; line-height: 128px; }
+      #nameRule { margin-top: 26px; height: 6px; width: 120px; background: var(--accent); transform-origin: 0 50%; }
+      #nameTag { margin-top: 22px; font-size: 26px; color: var(--muted); }
+
+      #tag { left: 70px; top: 250px; width: 960px; }
+      #tag .l1 { font-size: 120px; font-weight: 300; letter-spacing: -0.04em; line-height: 1.02; }
+      #tag .l1 b { font-weight: 800; }
+      #tag .w { display: inline-block; }
+      #move { display: inline-block; font-size: 230px; line-height: .9; color: var(--accent); }
+      #stack { left: 70px; top: 640px; font-size: 24px; color: var(--muted); white-space: nowrap; }
+
+      /* ---------- wipes ---------- */
+      .diamond { left: 540px; top: 960px; width: 200px; height: 200px; margin: -100px 0 0 -100px; }
+      #wipeA { background: var(--accent); }
+      #wipeB { background: var(--night); }
+
+      /* ---------- night world ---------- */
+      #night { background: var(--night); color: var(--paper); }
+      #nightSil { left: -8px; top: 713px; width: 776px; height: 1233px; overflow: visible; }
+      #nightSil path { fill: none; stroke: rgba(239,235,227,.16); stroke-width: 3; }
+      #roleLabel { left: 70px; top: 300px; font-size: 26px; color: rgba(239,235,227,.55); }
+      #roleCount { right: 70px; top: 300px; font-size: 26px; color: var(--accent); }
+      .slot { left: 70px; width: 940px; overflow: hidden; }
+      #slotA { top: 700px; height: 190px; }
+      #slotB { top: 880px; height: 250px; }
+      .slot .word { position: absolute; left: 0; top: 0; white-space: nowrap; }
+      #slotA .word { font-size: 170px; font-weight: 800; letter-spacing: -0.05em; line-height: 190px; }
+      #slotB .word { font-size: 215px; line-height: 250px; color: var(--accent); }
+      #alt { right: 78px; top: 520px; width: 2px; height: 820px; background: rgba(239,235,227,.18); }
+      #altFill { right: 78px; top: 520px; width: 2px; height: 820px; background: var(--accent); transform-origin: 50% 100%; transform: scaleY(0); }
+      #altDot { right: 71px; top: 1326px; width: 16px; height: 16px; background: var(--accent); transform: rotate(45deg); }
+      .altTick { right: 96px; font-size: 18px; color: rgba(239,235,227,.4); text-align: right; }
+      .spark { left: 540px; top: 1060px; width: 22px; height: 22px; margin: -11px 0 0 -11px; background: var(--accent); }
+
+      /* ---------- end card ---------- */
+      #end { background: var(--paper); clip-path: circle(0% at 540px 960px); }
+      #avatar { left: 390px; top: 470px; width: 300px; height: 300px; border-radius: 50%;
+        background: var(--accent); overflow: hidden; }
+      #avatar img { position: absolute; left: 18px; top: 34px; width: 360px; }
+      #endName { left: 0; top: 830px; width: 1080px; text-align: center; font-size: 132px;
+        font-weight: 800; letter-spacing: -0.05em; line-height: 1; white-space: nowrap; }
+      #endTitle { left: 0; top: 975px; width: 1080px; text-align: center; font-size: 104px;
+        line-height: 1; color: var(--accent); white-space: nowrap; }
+      #endTitle .lead { font-family: 'Inter Tight', sans-serif; font-style: normal; font-weight: 300;
+        color: var(--ink); letter-spacing: -0.04em; font-size: 88px; }
+      #endRule { left: 390px; top: 1130px; width: 300px; height: 3px; background: var(--ink); transform-origin: 50% 50%; }
+      #endRoles { left: 0; top: 1170px; width: 1080px; text-align: center; font-size: 26px; color: var(--muted); }
+      #endCta { left: 0; top: 1290px; width: 1080px; text-align: center; font-size: 54px; font-weight: 500; letter-spacing: -0.02em; }
+      #endCta .arrow { display: inline-block; color: var(--accent); }
+
+      /* ---------- HUD (timeline chrome) ---------- */
+      #hud { pointer-events: none; }
+      #tc { left: 70px; top: 120px; font-size: 26px; }
+      #compName { right: 70px; top: 120px; font-size: 26px; text-align: right; }
+      #rec { left: 42px; top: 128px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); }
+      #ruler { left: 70px; top: 1760px; width: 940px; height: 60px; }
+      #rulerLine { left: 0; top: 40px; width: 940px; height: 2px; background: currentColor; opacity: .35; transform-origin: 0 50%; }
+      .tick { top: 30px; width: 1px; height: 10px; background: currentColor; opacity: .35; }
+      .tick.major { top: 22px; height: 18px; opacity: .6; }
+      .kf { top: 33px; width: 16px; height: 16px; margin-left: -8px; transform: rotate(45deg);
+        border: 2px solid currentColor; opacity: .6; }
+      #playhead { left: 0; top: 0; width: 2px; height: 60px; background: var(--accent); }
+      #playhead::before { content: ''; position: absolute; left: -9px; top: -4px; width: 20px; height: 14px;
+        background: var(--accent); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="15" data-width="1080" data-height="1920">
+
+      <!-- paper world: hello + silhouette + name + tagline -->
+      <div id="paper" class="clip" data-start="0" data-duration="7.3" data-track-index="0">
+        <div id="grid" class="clip"></div>
+        <div id="guideH" class="abs guide"></div>
+        <div id="guideV" class="abs guide"></div>
+
+        <div id="hello" class="abs"></div>
+        <div id="caret" class="abs"></div>
+
+        <div id="sil" class="abs">
+          <img id="silImg" src="assets/johnny.png" alt="" />
+          <svg id="silSvg" class="abs" viewBox="0 0 1080 1715">
+            <g id="handles"></g>
+            <path id="silPath" d="" />
+            <g id="verts"></g>
+          </svg>
+        </div>
+
+        <div id="nameBlock" class="abs">
+          <div id="im" class="serif">I'm</div>
+          <div class="nameLine"><span id="first"></span></div>
+          <div class="nameLine"><span id="last"></span></div>
+          <div id="nameRule"></div>
+          <div id="nameTag" class="mono">MOTION DESIGNER / BUILDER</div>
+        </div>
+
+        <div id="tag" class="abs">
+          <div class="l1"><span class="w">I&nbsp;make</span> <span class="w"><b>pixels</b></span></div>
+          <div><span id="move" class="serif">move.</span></div>
+        </div>
+        <div id="stack" class="abs mono"></div>
+      </div>
+
+      <div id="wipeA" class="clip diamond" data-start="6.2" data-duration="1.1" data-track-index="1"></div>
+
+      <!-- night world: the title climb -->
+      <div id="night" class="clip" data-start="6.9" data-duration="5.7" data-track-index="2">
+        <svg id="nightSil" class="abs" viewBox="0 0 1080 1715"><path id="nightPath" d="" /></svg>
+        <div id="roleLabel" class="abs mono"></div>
+        <div id="roleCount" class="abs mono">01 / 06</div>
+        <div id="slotA" class="abs slot"></div>
+        <div id="slotB" class="abs slot"></div>
+        <div id="alt" class="abs"></div>
+        <div id="altFill" class="abs"></div>
+        <div id="altDot" class="abs"></div>
+        <div id="altTicks"></div>
+        <div id="sparks"></div>
+      </div>
+
+      <div id="wipeB" class="clip diamond" data-start="6.6" data-duration="0.7" data-track-index="3"></div>
+
+      <!-- end card -->
+      <div id="end" class="clip" data-start="11.8" data-duration="3.2" data-track-index="4">
+        <div id="avatar" class="abs"><img src="assets/johnny.png" alt="" /></div>
+        <div id="endName" class="abs"></div>
+        <div id="endTitle" class="abs serif"></div>
+        <div id="endRule" class="abs"></div>
+        <div id="endRoles" class="abs mono">CREATIVE TECHNOLOGIST · MOTION SYSTEMS · LOTTIE AT SCALE</div>
+        <div id="endCta" class="abs">Let's make it move <span class="arrow">→</span></div>
+      </div>
+
+      <!-- HUD: persistent timeline chrome -->
+      <div id="hud" class="clip" data-start="0" data-duration="15" data-track-index="5">
+        <div id="rec" class="abs"></div>
+        <div id="tc" class="abs mono">00:00:00:00</div>
+        <div id="compName" class="abs mono"></div>
+        <div id="ruler" class="abs">
+          <div id="rulerLine" class="abs"></div>
+          <div id="ticks"></div>
+          <div id="playhead" class="abs"></div>
+        </div>
+      </div>
+
+      <audio id="sfx" src="assets/sfx.wav" data-start="0" data-duration="15" data-track-index="6" data-volume="1"></audio>
+    </div>
+
+    <script>
+      (function () {
+        const V = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+        const FIRST = V.firstName || 'Johnny';
+        const LAST = V.lastName || 'Talmor';
+        const FINAL_LEAD = V.finalLead || 'Head of';
+        const FINAL_WORD = V.finalTitle || 'Motion';
+        const ACCENT = V.accent || '#FF4A1C';
+        document.documentElement.style.setProperty('--accent', ACCENT);
+
+        const DUR = 15, FPS = 30;
+        const $ = (s) => document.querySelector(s);
+        const el = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; parent.appendChild(e); return e; };
+        const svgEl = (tag, attrs, parent) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
+
+        // ---------- build DOM from data ----------
+        $('#first').textContent = FIRST;
+        $('#last').textContent = LAST;
+        $('#compName').textContent = (FIRST + '_' + LAST).toUpperCase() + '.aep';
+        $('#roleLabel').textContent = (FIRST + ' ' + LAST).toUpperCase() + ' —';
+        $('#endName').textContent = FIRST + ' ' + LAST;
+        $('#endTitle').innerHTML = '<span class="lead">' + FINAL_LEAD + '</span> ' + FINAL_WORD;
+
+        const hello = $('#hello');
+        'Hello'.split('').forEach((c) => el('span', 'ch', hello, c));
+        el('span', 'ch dot', hello, '.');
+
+        const stackText = 'LOTTIE · AFTER EFFECTS · HYPERFRAMES · PERSONALIZED VIDEO';
+        const stack = $('#stack');
+        stackText.split('').forEach((c) => el('span', 'sc', stack, c === ' ' ? '&nbsp;' : c));
+
+        // silhouette vector: outline, vertex squares, bezier handles
+        const path = $('#silPath');
+        path.setAttribute('d', SIL.d);
+        $('#nightPath').setAttribute('d', SIL.d);
+        const pathLen = path.getTotalLength();
+        path.style.strokeDasharray = pathLen;
+        path.style.strokeDashoffset = pathLen;
+        const nightPath = $('#nightPath');
+        nightPath.style.strokeDasharray = pathLen;
+        nightPath.style.strokeDashoffset = pathLen;
+
+        // only vertices on the visible contour (not on the frame edges)
+        const verts = SIL.verts.filter(([x, y]) => x > 4 && y < SIL.h - 4);
+        const vg = $('#verts'), hg = $('#handles');
+        const vtxEls = [], handleEls = [];
+        verts.forEach(([x, y], i) => {
+          const prev = verts[Math.max(0, i - 1)], next = verts[Math.min(verts.length - 1, i + 1)];
+          let tx = next[0] - prev[0], ty = next[1] - prev[1];
+          const m = Math.hypot(tx, ty) || 1; tx = tx / m * 70; ty = ty / m * 70;
+          const h = svgEl('g', {}, hg);
+          svgEl('line', { x1: x - tx, y1: y - ty, x2: x + tx, y2: y + ty, class: 'handle' }, h);
+          svgEl('circle', { cx: x - tx, cy: y - ty, r: 7, fill: '#131313' }, h);
+          svgEl('circle', { cx: x + tx, cy: y + ty, r: 7, fill: '#131313' }, h);
+          h.style.transformOrigin = x + 'px ' + y + 'px';
+          handleEls.push(h);
+          const r = svgEl('rect', { x: x - 13, y: y - 13, width: 26, height: 26, class: 'vtx' }, vg);
+          r.style.transformOrigin = x + 'px ' + y + 'px';
+          vtxEls.push(r);
+        });
+
+        // title climb — aim high
+        const ROLES = [
+          ['Motion', 'Designer'],
+          ['Motion', 'Director'],
+          ['Creative', 'Technologist'],
+          ['Systems', 'Architect'],
+          ['Animation', 'Engineer'],
+          [FINAL_LEAD, FINAL_WORD],
+        ];
+        const slotA = $('#slotA'), slotB = $('#slotB');
+        const aEls = ROLES.map((r) => el('div', 'word', slotA, r[0]));
+        const bEls = ROLES.map((r) => { const e = el('div', 'word serif', slotB, r[1]); if (r[1].length > 9) e.style.fontSize = Math.round(215 * 9.5 / r[1].length) + 'px'; return e; });
+        const altTicks = $('#altTicks');
+        ROLES.forEach((r, i) => {
+          const t = el('div', 'abs altTick mono', altTicks, String(i + 1).padStart(2, '0'));
+          t.style.top = (1326 - i * (806 / (ROLES.length - 1))) + 'px';
+        });
+        const sparks = $('#sparks');
+        const sparkEls = Array.from({ length: 10 }, () => el('div', 'abs spark', sparks));
+
+        // ruler ticks + scene keyframes
+        const ticks = $('#ticks');
+        for (let s = 0; s <= DUR; s += 0.5) {
+          const t = el('div', 'abs tick' + (s % 1.5 === 0 ? ' major' : ''), ticks);
+          t.style.left = (s / DUR * 940) + 'px';
+        }
+        const KF = [0, 1.6, 4.1, 6.6, 7.1, 10.35, 11.9, 15];
+        const kfEls = KF.map((s) => { const k = el('div', 'abs kf', ticks); k.style.left = (s / DUR * 940) + 'px'; return k; });
+
+        // ---------- timeline ----------
+        const tl = gsap.timeline({ paused: true });
+
+        // HUD: timecode + playhead (driven by one linear proxy tween, seek-safe)
+        const clock = { t: 0 };
+        const tcEl = $('#tc');
+        tl.to(clock, { t: DUR, duration: DUR, ease: 'none', onUpdate: () => {
+          const f = Math.min(Math.round(clock.t * FPS), DUR * FPS - 1);
+          const ss = Math.floor(f / FPS), ff = f % FPS;
+          tcEl.textContent = '00:00:' + String(ss).padStart(2, '0') + ':' + String(ff).padStart(2, '0');
+        } }, 0);
+        tl.fromTo('#playhead', { x: 0 }, { x: 940, duration: DUR, ease: 'none' }, 0);
+        tl.fromTo('#rulerLine', { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: 'power3.out' }, 0);
+        tl.fromTo('#ticks .tick', { opacity: 0 }, { opacity: 0.35, duration: 0.3, stagger: { each: 0.012, from: 'start' } }, 0.05);
+        kfEls.forEach((k, i) => {
+          tl.set(k, { backgroundColor: 'transparent', borderColor: 'currentColor' }, 0);
+          tl.to(k, { backgroundColor: ACCENT, borderColor: ACCENT, opacity: 1, duration: 0.01 }, KF[i]);
+          tl.fromTo(k, { scale: 1.9 }, { scale: 1, duration: 0.35, ease: 'back.out(3)', immediateRender: false }, KF[i]);
+        });
+        tl.fromTo('#rec', { opacity: 1 }, { opacity: 0.15, duration: 0.5, repeat: 29, yoyo: true, ease: 'steps(1)' }, 0);
+        // HUD colour follows the world underneath
+        tl.set('#hud', { color: '#131313' }, 0);
+        tl.to('#hud', { color: '#efebe3', duration: 0.2 }, 6.95);
+        tl.to('#hud', { color: '#131313', duration: 0.2 }, 12.05);
+
+        // ---- Scene 1: Hello (0 – 1.6) ----
+        tl.fromTo('#guideH', { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: 'power3.inOut' }, 0);
+        tl.fromTo('#guideV', { scaleY: 0 }, { scaleY: 1, duration: 0.7, ease: 'power3.inOut' }, 0.08);
+        tl.fromTo('#grid', { opacity: 0 }, { opacity: 1, duration: 0.6 }, 0);
+        const chars = hello.querySelectorAll('.ch');
+        const typeAt = [0.34, 0.45, 0.55, 0.64, 0.76, 0.98];
+        tl.set(chars, { opacity: 0, y: 26 }, 0);
+        // measure glyph right edges for the caret
+        const hb = hello.getBoundingClientRect();
+        const rights = Array.from(chars).map((c) => c.getBoundingClientRect().right - hb.left);
+        const firstLeft = chars[0].getBoundingClientRect().left - hb.left;
+        tl.set('#caret', { x: firstLeft - 16, opacity: 1 }, 0);
+        chars.forEach((c, i) => {
+          tl.to(c, { opacity: 1, y: 0, duration: 0.16, ease: 'power3.out' }, typeAt[i]);
+          tl.set('#caret', { x: rights[i] + 6 }, typeAt[i]);
+        });
+        tl.fromTo('#caret', { opacity: 1 }, { opacity: 0, duration: 0.14, repeat: 2, yoyo: true, ease: 'steps(1)', immediateRender: false }, 1.05);
+        // hello lifts away to make room (exit faster than entrance, accelerating)
+        tl.to('#hello', { y: -190, scale: 0.42, transformOrigin: '50% 0%', duration: 0.55, ease: 'power3.inOut' }, 1.5);
+        tl.to('#guideH', { opacity: 0, duration: 0.3 }, 1.6);
+        tl.to('#guideV', { opacity: 0, duration: 0.3 }, 1.6);
+
+        // ---- Scene 2: the silhouette is drawn as a path (1.6 – 4.1) ----
+        tl.to(path, { strokeDashoffset: 0, duration: 1.05, ease: 'power2.inOut' }, 1.6);
+        vtxEls.forEach((v, i) => {
+          const t = 1.75 + (i / vtxEls.length) * 0.9;
+          tl.fromTo(v, { scale: 0 }, { scale: 1, duration: 0.3, ease: 'back.out(3)', immediateRender: false }, t);
+          tl.set(v, { scale: 0 }, 0);
+          tl.fromTo(handleEls[i], { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'power3.out', immediateRender: false }, t + 0.06);
+          tl.set(handleEls[i], { scale: 0, opacity: 0 }, 0);
+        });
+        tl.to('#silImg', { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.6, ease: 'power4.inOut' }, 2.55);
+        tl.to(handleEls, { scale: 0, opacity: 0, duration: 0.22, ease: 'power2.in', stagger: 0.015 }, 2.95);
+        tl.to(vtxEls, { scale: 0, duration: 0.22, ease: 'power2.in', stagger: 0.015 }, 3.0);
+        tl.to(path, { opacity: 0, duration: 0.3 }, 3.15);
+        tl.to('#grid', { opacity: 0.45, duration: 0.5 }, 3.0);
+
+        tl.fromTo('#im', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 2.85);
+        tl.fromTo('#first', { yPercent: 105 }, { yPercent: 0, duration: 0.5, ease: 'power4.out' }, 3.05);
+        tl.fromTo('#last', { yPercent: 105 }, { yPercent: 0, duration: 0.5, ease: 'power4.out' }, 3.18);
+        tl.fromTo('#nameRule', { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: 'power3.out' }, 3.45);
+        tl.fromTo('#nameTag', { opacity: 0 }, { opacity: 1, duration: 0.4 }, 3.6);
+
+        // ---- Scene 3: I make pixels move. (4.1 – 6.4) ----
+        tl.to('#hello', { y: -420, opacity: 0, duration: 0.35, ease: 'power3.in' }, 4.0);
+        tl.fromTo('#tag .w', { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.14 }, 4.15);
+        // Johnny's inertial bounce: overshoot lands ~75% in, long settle
+        tl.fromTo('#move', { opacity: 0, y: -240, scaleY: 1.18, scaleX: 0.9, transformOrigin: '50% 100%' },
+          { opacity: 1, y: 0, scaleY: 1, scaleX: 1, duration: 0.42, ease: 'power3.in' }, 4.55);
+        tl.to('#move', { scaleY: 0.78, scaleX: 1.14, duration: 0.08, ease: 'power2.out' }, 4.97);
+        tl.to('#move', { scaleY: 1, scaleX: 1, y: 0, duration: 0.7, ease: 'elastic.out(1, 0.35)' }, 5.05);
+        const scs = stack.querySelectorAll('.sc');
+        tl.fromTo(scs, { opacity: 0 }, { opacity: 1, duration: 0.01, stagger: 0.45 / scs.length }, 5.2);
+
+        // ---- Transition: keyframe diamond wipe (6.2 – 7.3) ----
+        tl.fromTo('#wipeA', { scale: 0, rotation: 45 }, { scale: 14, rotation: 135, duration: 0.75, ease: 'power3.in' }, 6.2);
+        tl.fromTo('#wipeB', { scale: 0, rotation: 45 }, { scale: 14, rotation: 135, duration: 0.55, ease: 'power3.in' }, 6.6);
+
+        // ---- Scene 4: the climb (7.0 – 11.9) ----
+        tl.fromTo(nightPath, { strokeDashoffset: pathLen }, { strokeDashoffset: 0, duration: 1.6, ease: 'power2.inOut' }, 7.0);
+        tl.fromTo('#roleLabel', { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 7.05);
+        tl.fromTo('#roleCount', { opacity: 0 }, { opacity: 1, duration: 0.3 }, 7.1);
+        tl.fromTo('#altTicks .altTick', { opacity: 0 }, { opacity: 1, duration: 0.2, stagger: 0.04 }, 7.1);
+
+        aEls.forEach((e) => tl.set(e, { yPercent: 110 }, 0));
+        bEls.forEach((e) => tl.set(e, { yPercent: 110 }, 0));
+        // accelerating holds: the climb speeds up toward the top
+        const at = [7.15, 7.95, 8.65, 9.25, 9.8, 10.35];
+        const roleCount = $('#roleCount');
+        at.forEach((t, i) => {
+          const last = i === ROLES.length - 1;
+          const inDur = last ? 0.55 : 0.34;
+          if (i > 0) {
+            if (ROLES[i][0] !== ROLES[i - 1][0]) tl.to(aEls[i - 1], { yPercent: -110, duration: 0.22, ease: 'power3.in' }, t - 0.2);
+            else tl.set(aEls[i - 1], { yPercent: 110 }, t);
+            tl.to(bEls[i - 1], { yPercent: -110, duration: 0.22, ease: 'power3.in' }, t - 0.18);
+          }
+          if (i === 0 || ROLES[i][0] !== ROLES[i - 1][0]) tl.fromTo(aEls[i], { yPercent: 110 }, { yPercent: 0, duration: inDur, ease: 'power4.out', immediateRender: false }, t);
+          else tl.set(aEls[i], { yPercent: 0 }, t);
+          tl.fromTo(bEls[i], { yPercent: 110 }, { yPercent: 0, duration: inDur + 0.1, ease: last ? 'back.out(1.6)' : 'power4.out', immediateRender: false }, t + 0.05);
+          tl.call(() => {}, null, t);
+          tl.set(roleCount, { textContent: String(i + 1).padStart(2, '0') + ' / ' + String(ROLES.length).padStart(2, '0') }, t);
+          const frac = i / (ROLES.length - 1);
+          tl.to('#altFill', { scaleY: frac, duration: 0.35, ease: 'power3.out' }, t);
+          tl.to('#altDot', { y: -frac * 806, duration: 0.35, ease: 'power3.out' }, t);
+        });
+        tl.set(roleCount, { textContent: '01 / 06' }, 0);
+        // the top: final title grows, sparks fly (deterministic angles)
+        tl.fromTo(['#slotA', '#slotB'], { scale: 1 }, { scale: 1.06, transformOrigin: '0% 50%', duration: 1.4, ease: 'power1.out' }, 10.4);
+        sparkEls.forEach((s, i) => {
+          const ang = (i / sparkEls.length) * Math.PI * 2 + 0.3;
+          const dist = 300 + ((i * 97) % 5) * 60;
+          tl.fromTo(s, { x: 0, y: 0, scale: 1, rotation: 45, opacity: 1 },
+            { x: Math.cos(ang) * dist, y: Math.sin(ang) * dist, scale: 0, rotation: 225, duration: 0.8, ease: 'power3.out', immediateRender: false }, 10.45);
+          tl.set(s, { opacity: 0 }, 0);
+        });
+        tl.to('#roleCount', { color: '#efebe3', duration: 0.2 }, 10.35);
+
+        // ---- Scene 5: end card, iris out from centre (11.8 – 15) ----
+        tl.fromTo('#end', { clipPath: 'circle(0% at 540px 960px)' }, { clipPath: 'circle(75% at 540px 960px)', duration: 0.6, ease: 'power3.inOut' }, 11.8);
+        tl.fromTo('#avatar', { scale: 0 }, { scale: 1, duration: 0.55, ease: 'back.out(2.2)' }, 12.2);
+        tl.fromTo('#avatar img', { y: 120 }, { y: 0, duration: 0.6, ease: 'power3.out' }, 12.3);
+        tl.fromTo('#endName', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 12.45);
+        tl.fromTo('#endTitle', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 12.62);
+        tl.fromTo('#endRule', { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: 'power3.inOut' }, 12.85);
+        tl.fromTo('#endRoles', { opacity: 0 }, { opacity: 1, duration: 0.4 }, 13.0);
+        tl.fromTo('#endCta', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 13.25);
+        // the CTA breathes — never frozen at rest
+        tl.fromTo('#endCta .arrow', { x: 0 }, { x: 18, duration: 0.35, repeat: 4, yoyo: true, ease: 'sine.inOut', immediateRender: false }, 13.55);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines['main'] = tl;
+        tl.seek(0);
+      })();
+    </script>
+  </body>
+</html>
